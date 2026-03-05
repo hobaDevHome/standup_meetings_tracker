@@ -326,45 +326,65 @@ window.toggle = function(d) { document.getElementById('mc-' + d).classList.toggl
 
 /* ── PRINT & SAVE FILE ── */
 // @ts-ignore
+/* ── PRINT & SAVE FILE ── */
 function buildPrintContent(m) {
-  var rows = TEAMS.map(function(t) {
+  var cards = TEAMS.map(function(t) {
     var data = m.teams[t.id] || { done:[], planned:[] };
     if (!data.done.length && !data.planned.length) return '';
-    // @ts-ignore
-    var di = data.done.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') || '<li>—</li>';
-    // @ts-ignore
-    var pi = data.planned.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') || '<li>—</li>';
-    return '<div class="ts">' +
-      '<div class="tt" style="border-right:4px solid ' + t.color + '">' + t.label + '</div>' +
-      '<div class="cols">' +
-        '<div><p class="ct done-ct">&#10003; Done</p><ul class="tl">' + di + '</ul></div>' +
-        '<div><p class="ct plan-ct">&#8594; Planned</p><ul class="tl">' + pi + '</ul></div>' +
+    var di = data.done.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') || '<li class="emp">—</li>';
+    var pi = data.planned.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') || '<li class="emp">—</li>';
+    var leadBadge = t.id === 'lead' ? '<span class="badge-lead">أنا</span>' : '';
+    return '<div class="card">' +
+      '<div class="card-hd">' +
+        '<div class="tdot" style="background:' + t.color + '"></div>' +
+        '<span class="card-title">' + t.label + '</span>' + leadBadge +
+      '</div>' +
+      '<div class="tgrid">' +
+        '<div>' +
+          '<div class="col-lbl"><span class="sym-done">✓</span><span class="badge-done">Done</span></div>' +
+          '<ul class="tl">' + di + '</ul>' +
+        '</div>' +
+        '<div>' +
+          '<div class="col-lbl"><span class="sym-plan">→</span><span class="badge-plan">Planned</span></div>' +
+          '<ul class="tl">' + pi + '</ul>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
 
   var css = [
-    'body{font-family:Arial,sans-serif;direction:rtl;background:#fff;color:#111;padding:40px;font-size:13px;max-width:800px;margin:0 auto}',
-    'h1{font-size:20px;font-weight:700;padding-bottom:10px;border-bottom:2px solid #111;margin-bottom:4px}',
-    '.dt{color:#555;font-size:12px;margin-bottom:24px}',
-    '.ts{margin-top:20px}',
-    '.tt{font-size:14px;font-weight:700;padding:6px 12px;background:#f4f5f8;margin-bottom:10px;border-radius:4px}',
-    '.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}',
-    '.ct{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;padding-bottom:4px;border-bottom:2px solid}',
-    '.done-ct{color:#16a272;border-color:#16a272}',
-    '.plan-ct{color:#d4820a;border-color:#d4820a}',
-    '.tl{list-style:none;padding:0;margin:0}',
-    '.tl li{font-size:12.5px;padding:4px 0;border-bottom:1px solid #eee;color:#333;line-height:1.5}',
-    '.tl li::before{content:"• ";color:#aaa}'
+    '@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap");',
+    '*{margin:0;padding:0;box-sizing:border-box}',
+    'body{font-family:"IBM Plex Sans Arabic",sans-serif;direction:rtl;background:#f5f6fa;color:#1a1e2e;padding:28px;font-size:13px;max-width:860px;margin:0 auto}',
+    '.hdr{display:flex;align-items:center;gap:10px;margin-bottom:6px}',
+    '.logo{width:28px;height:28px;background:#4a6cf7;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px}',
+    '.main-title{font-size:20px;font-weight:700;letter-spacing:-.4px}',
+    '.sub-date{font-size:13px;color:#5a6080;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #e0e3ed}',
+    '.card{background:#fff;border:1px solid #e0e3ed;border-radius:10px;padding:18px 20px;margin-bottom:12px;page-break-inside:avoid}',
+    '.card-hd{display:flex;align-items:center;gap:8px;margin-bottom:14px}',
+    '.tdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}',
+    '.card-title{font-weight:600;font-size:14px}',
+    '.badge-lead{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(147,51,234,.1);color:#9333ea;margin-right:4px}',
+    '.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}',
+    '.col-lbl{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}',
+    '.sym-done{color:#16a272}.sym-plan{color:#d4820a}',
+    '.badge-done{background:rgba(22,162,114,.1);color:#16a272;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}',
+    '.badge-plan{background:rgba(212,130,10,.1);color:#d4820a;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}',
+    '.tl{list-style:none;background:#f5f6fa;border-radius:6px;padding:8px 10px;min-height:36px}',
+    '.tl li{font-size:12.5px;padding:4px 0;border-bottom:1px solid #e0e3ed;color:#5a6080;line-height:1.6}',
+    '.tl li:last-child{border-bottom:none}',
+    '.tl li::before{content:"·";margin-left:7px;color:#9aa0b8}',
+    '.emp{color:#9aa0b8 !important;font-size:12px}',
+    '@media print{@page{margin:12mm}body{background:#fff;padding:0}.card{border-color:#ddd}}'
   ].join('');
 
   return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">' +
     '<title>Standup ' + m.date + '</title>' +
     '<style>' + css + '</style>' +
     '</head><body>' +
-    '<h1>Standup Meeting</h1>' +
-    '<p class="dt">' + fmtDate(m.date) + '</p>' +
-    rows +
+    '<div class="hdr"><div class="logo">📋</div><div class="main-title">Standup Meeting</div></div>' +
+    '<div class="sub-date">' + fmtDate(m.date) + '</div>' +
+    cards +
     '</body></html>';
 }
 
