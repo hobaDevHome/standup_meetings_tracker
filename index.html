@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Standup Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f5f6fa; --surface:#fff; --surface2:#eef0f6;
+    --border:#e0e3ed; --border2:#c8cde0;
+    --text:#1a1e2e; --text2:#5a6080; --text3:#9aa0b8;
+    --accent:#4a6cf7; --accent2:#3558e0;
+    --done:#16a272; --planned:#d4820a; --lead:#9333ea;
+    --danger:#dc2626;
+    --r:10px; --r2:6px; --sh:0 1px 4px rgba(0,0,0,.07);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px}
+  .logo-icon{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+  .nav{display:flex;gap:4px}
+  .nav-btn{padding:6px 16px;border-radius:var(--r2);border:none;background:transparent;color:var(--text2);font-family:inherit;font-size:13px;cursor:pointer;transition:all .15s;font-weight:500}
+  .nav-btn:hover{background:var(--surface2);color:var(--text)}
+  .nav-btn.active{background:var(--accent);color:#fff}
+  .sync{font-size:12px;color:var(--text3);display:flex;align-items:center;gap:6px}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--done)}
+  .sync-dot.on{background:var(--planned);animation:pulse 1s infinite}
+  .sync-dot.err{background:var(--danger)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .main{max-width:900px;margin:0 auto;padding:32px 24px}
+  .page{display:none}.page.active{display:block}
+  .page-title{font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-.5px}
+  .page-sub{color:var(--text2);font-size:13px;margin-bottom:28px}
+
+  .setup-wrap{max-width:520px;margin:60px auto}
+  .setup-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:32px;box-shadow:var(--sh)}
+  .setup-title{font-size:20px;font-weight:700;margin-bottom:6px}
+  .setup-sub{color:var(--text2);font-size:13px;margin-bottom:20px;line-height:1.7}
+  .steps{background:var(--surface2);border-radius:var(--r2);padding:16px;margin-bottom:24px;border:1px solid var(--border);font-size:12.5px;color:var(--text2);line-height:2.1}
+  .steps a{color:var(--accent);text-decoration:none}
+  .steps a:hover{text-decoration:underline}
+  .steps code{background:var(--border);padding:1px 6px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:11px}
+  .fg{margin-bottom:18px}
+  .fl{display:block;font-weight:600;font-size:13px;margin-bottom:7px}
+  .fh{font-size:12px;color:var(--text3);margin-top:5px;line-height:1.6}
+  .fi{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r2);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;padding:10px 14px;transition:border-color .15s;direction:ltr}
+  .fi:focus{outline:none;border-color:var(--accent)}
+  .fi.err-field{border-color:var(--danger)}
+  .err-msg{font-size:12px;color:var(--danger);margin-top:6px;display:none;line-height:1.5}
+  .btn-primary{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;margin-top:4px}
+  .btn-primary:hover{background:var(--accent2)}
+  .btn-primary:disabled{opacity:.6;cursor:not-allowed}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:16px;box-shadow:var(--sh)}
+  .card-header{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .tdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .card-title{font-weight:600;font-size:15px}
+  .badge{font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px}
+  .bd{background:rgba(22,162,114,.1);color:var(--done)}
+  .bp{background:rgba(212,130,10,.1);color:var(--planned)}
+  .bl{background:rgba(147,51,234,.1);color:var(--lead)}
+  .tgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .tsec label{display:flex;align-items:center;gap:7px;margin-bottom:8px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .cd{color:var(--done)}.cp{color:var(--planned)}
+  textarea{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r2);color:var(--text);font-family:'IBM Plex Sans Arabic',sans-serif;font-size:13px;padding:10px 12px;resize:vertical;min-height:100px;line-height:1.7;transition:border-color .15s;direction:rtl}
+  textarea:focus{outline:none;border-color:var(--accent)}
+  textarea::placeholder{color:var(--text3)}
+  .date-row{display:flex;align-items:center;gap:14px;margin-bottom:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;box-shadow:var(--sh)}
+  .date-row label{font-weight:600;font-size:13px;color:var(--text2);white-space:nowrap}
+  input[type=date]{background:var(--bg);border:1px solid var(--border2);border-radius:var(--r2);color:var(--text);font-family:inherit;font-size:13px;padding:8px 12px;cursor:pointer;direction:ltr}
+  input[type=date]:focus{outline:none;border-color:var(--accent)}
+  .btn-save{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;transition:background .15s}
+  .btn-save:hover{background:var(--accent2)}
+  .btn-save:disabled{opacity:.6;cursor:not-allowed}
+
+  .srow{display:flex;gap:10px;margin-bottom:24px;align-items:center}
+  .si{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:inherit;font-size:13px;padding:10px 16px;direction:ltr;box-shadow:var(--sh)}
+  .si:focus{outline:none;border-color:var(--accent)}
+  .btn-s{padding:10px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;box-shadow:var(--sh)}
+  .btn-s:hover{border-color:var(--accent);color:var(--accent)}
+  .mlist{display:flex;flex-direction:column;gap:10px}
+  .mc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+  .mc-h{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:pointer;user-select:none}
+  .mc-date{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:14px;color:var(--accent)}
+  .mc-acts{display:flex;gap:6px;align-items:center}
+  .btn-a{padding:5px 13px;background:transparent;border:1px solid var(--border2);border-radius:var(--r2);color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer;transition:all .15s;font-weight:500}
+  .btn-a:hover{border-color:var(--accent);color:var(--accent);background:rgba(74,108,247,.05)}
+  .btn-a.del:hover{border-color:var(--danger);color:var(--danger);background:rgba(220,38,38,.05)}
+  .chev{color:var(--text3);font-size:11px;transition:transform .2s;margin-right:4px}
+  .mc.open .chev{transform:rotate(180deg)}
+  .mc-body{display:none;padding:0 20px 18px;border-top:1px solid var(--border)}
+  .mc.open .mc-body{display:block}
+  .tr{margin-top:14px}
+  .tr-title{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-weight:600;font-size:13px;padding-top:14px;border-top:1px solid var(--border)}
+  .tcols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .tct{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:7px}
+  .tl{list-style:none}
+  .tl li{padding:5px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);line-height:1.6}
+  .tl li:last-child{border-bottom:none}
+  .tl li::before{content:'·';margin-left:8px;color:var(--text3)}
+
+  .set-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;box-shadow:var(--sh);max-width:560px}
+  .btn-danger{padding:9px 20px;background:transparent;border:1px solid var(--danger);border-radius:var(--r2);color:var(--danger);font-family:inherit;font-size:13px;cursor:pointer;transition:all .15s;margin-top:16px}
+  .btn-danger:hover{background:rgba(220,38,38,.06)}
+
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+  .spin-d{border-color:var(--border2);border-top-color:var(--accent);width:28px;height:28px;border-width:3px;display:block;margin:0 auto}
+
+  .empty{text-align:center;padding:60px 20px;color:var(--text3)}
+  .empty-icon{font-size:36px;margin-bottom:12px}
+  .empty-text{font-size:15px}
+
+  .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);color:#fff;padding:11px 22px;border-radius:30px;font-weight:600;font-size:13px;transition:transform .3s cubic-bezier(.34,1.56,.64,1);z-index:999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+
+  @media print{body{background:#fff}.header,.srow,.mc-acts,.page-sub{display:none !important}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><div class="logo-icon">📋</div>Standup Tracker</div>
+  <nav class="nav" id="mainNav" style="display:none">
+    <button class="nav-btn" onclick="showPage('entry',this)">إدخال ميتنج</button>
+    <button class="nav-btn" onclick="showPage('history',this)">السجل</button>
+    <button class="nav-btn" onclick="showPage('settings',this)">⚙️</button>
+  </nav>
+  <div class="sync" id="syncWrap" style="display:none">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncTxt">متصل ✓</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="page active" id="page-setup">
+    <div class="setup-wrap">
+      <div class="setup-card">
+        <div class="setup-title">🔗 ربط GitHub Gist</div>
+        <div class="setup-sub">الداتا هتتحفظ على GitHub Gist بتاعك — متاحة من أي جهاز.</div>
+        <div class="steps">
+          <strong>١.</strong> روحي على <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a><br>
+          <strong>٢.</strong> اختاري <strong>gist</strong> فقط ثم Generate وانسخي الـ Token<br>
+          <strong>٣.</strong> روحي على <a href="https://gist.github.com" target="_blank">gist.github.com</a> → New gist<br>
+          <strong>٤.</strong> اسم الملف: <code>standup-data.json</code> — المحتوى: <code>[]</code><br>
+          <strong>٥.</strong> Create secret gist — انسخي الـ ID من الـ URL<br>
+          <small style="color:var(--text3)">مثال: gist.github.com/username/<u>abc123هنا-الـ-ID</u></small>
+        </div>
+        <div class="fg">
+          <label class="fl">🔑 Personal Access Token</label>
+          <input class="fi" type="password" id="inToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+          <div class="fh">بيتحفظ في متصفحك بس — مش بيتبعت لأي حتة</div>
+        </div>
+        <div class="fg">
+          <label class="fl">📄 Gist ID</label>
+          <input class="fi" type="text" id="inGist" placeholder="الـ ID الطويل من الـ URL" autocomplete="off">
+          <div class="err-msg" id="errMsg"></div>
+        </div>
+        <button class="btn-primary" id="btnConnect" onclick="doConnect()">🔗 ربط وابدأ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-entry">
+    <div class="page-title">ميتنج جديد</div>
+    <div class="page-sub">أدخلي بيانات الستاند اب — كل تاسك في سطر لوحده</div>
+    <div class="date-row">
+      <label>📅 تاريخ الميتنج</label>
+      <input type="date" id="meetingDate">
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="tdot" style="background:#4a6cf7"></div><span class="card-title">Modeling</span></div>
+      <div class="tgrid">
+        <div class="tsec"><label><span class="cd">✓</span><span class="badge bd" style="margin-right:6px">Done</span></label><textarea id="modeling-done" placeholder="التاسكات المنتهية&#10;كل تاسك في سطر"></textarea></div>
+        <div class="tsec"><label><span class="cp">→</span><span class="badge bp" style="margin-right:6px">Planned</span></label><textarea id="modeling-planned" placeholder="التاسكات المخططة&#10;كل تاسك في سطر"></textarea></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="tdot" style="background:#16a272"></div><span class="card-title">Unity</span></div>
+      <div class="tgrid">
+        <div class="tsec"><label><span class="cd">✓</span><span class="badge bd" style="margin-right:6px">Done</span></label><textarea id="unity-done" placeholder="التاسكات المنتهية&#10;كل تاسك في سطر"></textarea></div>
+        <div class="tsec"><label><span class="cp">→</span><span class="badge bp" style="margin-right:6px">Planned</span></label><textarea id="unity-planned" placeholder="التاسكات المخططة&#10;كل تاسك في سطر"></textarea></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="tdot" style="background:#d4820a"></div><span class="card-title">2D</span></div>
+      <div class="tgrid">
+        <div class="tsec"><label><span class="cd">✓</span><span class="badge bd" style="margin-right:6px">Done</span></label><textarea id="2d-done" placeholder="التاسكات المنتهية&#10;كل تاسك في سطر"></textarea></div>
+        <div class="tsec"><label><span class="cp">→</span><span class="badge bp" style="margin-right:6px">Planned</span></label><textarea id="2d-planned" placeholder="التاسكات المخططة&#10;كل تاسك في سطر"></textarea></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="tdot" style="background:#9333ea"></div><span class="card-title">Team Lead</span><span class="badge bl" style="margin-right:6px">أنا</span></div>
+      <div class="tgrid">
+        <div class="tsec"><label><span class="cd">✓</span><span class="badge bd" style="margin-right:6px">Done</span></label><textarea id="lead-done" placeholder="تاسكاتك المنتهية&#10;كل تاسك في سطر"></textarea></div>
+        <div class="tsec"><label><span class="cp">→</span><span class="badge bp" style="margin-right:6px">Planned</span></label><textarea id="lead-planned" placeholder="تاسكاتك المخططة&#10;كل تاسك في سطر"></textarea></div>
+      </div>
+    </div>
+    <button class="btn-save" id="btnSave" onclick="doSave()">💾 حفظ الميتنج</button>
+  </div>
+
+  <div class="page" id="page-history">
+    <div class="page-title">سجل الميتنجز</div>
+    <div class="page-sub">كل الميتنجز محفوظة على GitHub Gist بتاعك</div>
+    <div class="srow">
+      <input type="date" class="si" id="filterDate">
+      <button class="btn-s" onclick="doFilter()">🔍 فلتر</button>
+      <button class="btn-s" onclick="loadHistory()">الكل</button>
+    </div>
+    <div class="mlist" id="mlist"></div>
+  </div>
+
+  <div class="page" id="page-settings">
+    <div class="page-title">الإعدادات</div>
+    <div class="page-sub">بيانات الاتصال بـ GitHub Gist</div>
+    <div class="set-card">
+      <div class="fg"><label class="fl">🔑 Token</label><input class="fi" type="password" id="stToken" readonly></div>
+      <div class="fg"><label class="fl">📄 Gist ID</label><input class="fi" type="text" id="stGist" readonly></div>
+      <a id="gistLink" href="#" target="_blank" style="font-size:13px;color:var(--accent);text-decoration:none">🔗 افتحي الـ Gist على GitHub</a><br>
+      <button class="btn-danger" onclick="doDisconnect()">🔌 قطع الاتصال وتغيير الحساب</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- print iframe - hidden, used for printing without document.write -->
+<iframe id="printFrame" style="display:none"></iframe>
+
+<script src="app.js"></script>
+</body>
+</html>
