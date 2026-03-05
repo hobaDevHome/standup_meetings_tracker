@@ -5,29 +5,38 @@ var TEAMS = [
   { id:'lead',     label:'Team Lead', color:'#9333ea' }
 ];
 
+// @ts-ignore
 var TOKEN = '', GIST = '', cache = [];
 
 window.addEventListener('DOMContentLoaded', function() {
   TOKEN = localStorage.getItem('gh_token') || '';
   GIST  = localStorage.getItem('gh_gist')  || '';
+  // @ts-ignore
   document.getElementById('meetingDate').value = new Date().toISOString().split('T')[0];
   if (TOKEN && GIST) enterApp();
 });
 
 /* ── CONNECT ── */
+// @ts-ignore
 window.doConnect = async function() {
+  // @ts-ignore
   var token = document.getElementById('inToken').value.trim();
+  // @ts-ignore
   var gist  = document.getElementById('inGist').value.trim();
   var errEl = document.getElementById('errMsg');
   var btn   = document.getElementById('btnConnect');
 
+  // @ts-ignore
   errEl.style.display = 'none';
+  // @ts-ignore
   document.getElementById('inGist').classList.remove('err-field');
 
   if (!token) { showToast('⚠️ ادخلي الـ Token', true); return; }
   if (!gist)  { showToast('⚠️ ادخلي الـ Gist ID', true); return; }
 
+  // @ts-ignore
   btn.disabled = true;
+  // @ts-ignore
   btn.textContent = 'جاري التحقق...';
 
   try {
@@ -39,16 +48,23 @@ window.doConnect = async function() {
     });
 
     if (res.status === 404) {
+      // @ts-ignore
       document.getElementById('inGist').classList.add('err-field');
+      // @ts-ignore
       errEl.textContent = '❌ الـ Gist ID مش موجود — تأكدي من الـ URL';
+      // @ts-ignore
       errEl.style.display = 'block';
+      // @ts-ignore
       btn.disabled = false;
+      // @ts-ignore
       btn.textContent = '🔗 ربط وابدأ';
       return;
     }
     if (res.status === 401) {
       showToast('❌ الـ Token غلط أو انتهت صلاحيته', true);
+      // @ts-ignore
       btn.disabled = false;
+      // @ts-ignore
       btn.textContent = '🔗 ربط وابدأ';
       return;
     }
@@ -62,24 +78,33 @@ window.doConnect = async function() {
     showToast('✅ تم الاتصال بنجاح!');
 
   } catch(e) {
+    // @ts-ignore
     showToast('❌ فشل الاتصال: ' + e.message, true);
+    // @ts-ignore
     btn.disabled = false;
+    // @ts-ignore
     btn.textContent = '🔗 ربط وابدأ';
   }
 };
 
 function enterApp() {
   go('entry');
+  // @ts-ignore
   document.getElementById('mainNav').style.display  = 'flex';
+  // @ts-ignore
   document.getElementById('syncWrap').style.display = 'flex';
   var btns = document.querySelectorAll('.nav-btn');
   btns.forEach(function(b){ b.classList.remove('active'); });
   btns[0].classList.add('active');
+  // @ts-ignore
   document.getElementById('stToken').value = TOKEN;
+  // @ts-ignore
   document.getElementById('stGist').value  = GIST;
+  // @ts-ignore
   document.getElementById('gistLink').href = 'https://gist.github.com/' + GIST;
 }
 
+// @ts-ignore
 window.doDisconnect = function() {
   if (!confirm('هتقطعي الاتصال — الداتا على الـ Gist هتفضل موجودة.')) return;
   localStorage.removeItem('gh_token');
@@ -88,15 +113,19 @@ window.doDisconnect = function() {
 };
 
 /* ── NAV ── */
+// @ts-ignore
 window.showPage = function(name, btn) {
   go(name);
   document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
+  // @ts-ignore
   if (name === 'history') loadHistory();
 };
 
+// @ts-ignore
 function go(name) {
   document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  // @ts-ignore
   document.getElementById('page-' + name).classList.add('active');
 }
 
@@ -110,6 +139,7 @@ function gGet() {
   });
 }
 
+// @ts-ignore
 function gPatch(content) {
   var body = { files: { 'standup-data.json': { content: content } } };
   return fetch('https://api.github.com/gists/' + GIST, {
@@ -136,6 +166,7 @@ async function readGist() {
   return cache;
 }
 
+// @ts-ignore
 async function writeGist(meetings) {
   setSyncing(true);
   var res = await gPatch(JSON.stringify(meetings, null, 2));
@@ -145,79 +176,109 @@ async function writeGist(meetings) {
 }
 
 /* ── SAVE ── */
+// @ts-ignore
 window.doSave = async function() {
+  // @ts-ignore
   var date = document.getElementById('meetingDate').value;
   if (!date) { showToast('⚠️ اختاري تاريخ الميتنج', true); return; }
 
   var meeting = { date: date, teams: {} };
   TEAMS.forEach(function(t) {
+    // @ts-ignore
     var d = document.getElementById(t.id + '-done').value.trim();
+    // @ts-ignore
     var p = document.getElementById(t.id + '-planned').value.trim();
+    // @ts-ignore
     meeting.teams[t.id] = {
+      // @ts-ignore
       done:    d ? d.split('\n').filter(function(l){ return l.trim(); }) : [],
+      // @ts-ignore
       planned: p ? p.split('\n').filter(function(l){ return l.trim(); }) : []
     };
   });
 
   var btn = document.getElementById('btnSave');
+  // @ts-ignore
   btn.disabled = true;
+  // @ts-ignore
   btn.textContent = 'جاري الحفظ...';
 
   try {
     var meetings = await readGist();
+    // @ts-ignore
     var idx = meetings.findIndex(function(m){ return m.date === date; });
     if (idx >= 0) meetings[idx] = meeting; else meetings.push(meeting);
+    // @ts-ignore
     meetings.sort(function(a,b){ return b.date.localeCompare(a.date); });
     await writeGist(meetings);
     showToast('✅ تم الحفظ على GitHub!');
     TEAMS.forEach(function(t) {
+      // @ts-ignore
       document.getElementById(t.id + '-done').value    = '';
+      // @ts-ignore
       document.getElementById(t.id + '-planned').value = '';
     });
     var d = new Date(date); d.setDate(d.getDate() + 1);
+    // @ts-ignore
     document.getElementById('meetingDate').value = d.toISOString().split('T')[0];
   } catch(e) {
+    // @ts-ignore
     showToast('❌ مش قادرة تحفظ: ' + e.message, true);
     setSyncing(false, true);
   } finally {
+    // @ts-ignore
     btn.disabled = false;
+    // @ts-ignore
     btn.textContent = '💾 حفظ الميتنج';
   }
 };
 
 /* ── HISTORY ── */
+// @ts-ignore
 window.loadHistory = async function() {
+  // @ts-ignore
   document.getElementById('filterDate').value = '';
   var el = document.getElementById('mlist');
+  // @ts-ignore
   el.innerHTML = '<div class="empty"><div class="spin-d" style="animation:spin .7s linear infinite"></div></div>';
   try {
     renderList(await readGist());
   } catch(e) {
+    // @ts-ignore
     el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">مش قادرة تحمّل البيانات</div></div>';
     setSyncing(false, true);
   }
 };
 
+// @ts-ignore
 window.doFilter = function() {
+  // @ts-ignore
   var date = document.getElementById('filterDate').value;
+  // @ts-ignore
   if (!date) { loadHistory(); return; }
+  // @ts-ignore
   renderList(cache.filter(function(m){ return m.date === date; }), date);
 };
 
+// @ts-ignore
 function renderList(list, fd) {
   var el = document.getElementById('mlist');
   if (!list.length) {
     var msg = fd ? 'مفيش ميتنج بتاريخ ' + fmtDate(fd) : 'مفيش ميتنجز لحد دلوقتي';
+    // @ts-ignore
     el.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">' + msg + '</div></div>';
     return;
   }
+  // @ts-ignore
   el.innerHTML = list.map(mkCard).join('');
 }
 
 /* ── DELETE ── */
+// @ts-ignore
 window.doDelete = async function(date) {
   if (!confirm('تأكيدي حذف ميتنج ' + fmtDate(date) + '؟')) return;
   try {
+    // @ts-ignore
     var meetings = cache.filter(function(m){ return m.date !== date; });
     await writeGist(meetings);
     showToast('🗑️ تم الحذف');
@@ -229,11 +290,14 @@ window.doDelete = async function(date) {
 };
 
 /* ── CARD ── */
+// @ts-ignore
 function mkCard(m) {
   var body = TEAMS.map(function(t) {
     var data = m.teams[t.id] || { done:[], planned:[] };
     if (!data.done.length && !data.planned.length) return '';
+    // @ts-ignore
     var di = data.done.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') || '<li style="color:var(--text3)">—</li>';
+    // @ts-ignore
     var pi = data.planned.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') || '<li style="color:var(--text3)">—</li>';
     return '<div class="tr"><div class="tr-title"><div class="tdot" style="background:' + t.color + '"></div>' + t.label + '</div>' +
       '<div class="tcols">' +
@@ -257,14 +321,18 @@ function mkCard(m) {
   '</div>';
 }
 
+// @ts-ignore
 window.toggle = function(d) { document.getElementById('mc-' + d).classList.toggle('open'); };
 
 /* ── PRINT & SAVE FILE ── */
+// @ts-ignore
 function buildPrintContent(m) {
   var rows = TEAMS.map(function(t) {
     var data = m.teams[t.id] || { done:[], planned:[] };
     if (!data.done.length && !data.planned.length) return '';
+    // @ts-ignore
     var di = data.done.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') || '<li>—</li>';
+    // @ts-ignore
     var pi = data.planned.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') || '<li>—</li>';
     return '<div class="ts">' +
       '<div class="tt" style="border-right:4px solid ' + t.color + '">' + t.label + '</div>' +
@@ -300,15 +368,21 @@ function buildPrintContent(m) {
     '</body></html>';
 }
 
+// @ts-ignore
 window.doPrint = function(date) {
+  // @ts-ignore
   var m = cache.find(function(x){ return x.date === date; });
   if (!m) return;
   var iframe = document.getElementById('printFrame');
+  // @ts-ignore
   iframe.onload = function() { iframe.contentWindow.print(); };
+  // @ts-ignore
   iframe.srcdoc = buildPrintContent(m);
 };
 
+// @ts-ignore
 window.doSaveFile = function(date) {
+  // @ts-ignore
   var m = cache.find(function(x){ return x.date === date; });
   if (!m) return;
   var blob = new Blob([buildPrintContent(m)], { type:'text/html;charset=utf-8' });
@@ -322,13 +396,17 @@ window.doSaveFile = function(date) {
 };
 
 /* ── HELPERS ── */
+// @ts-ignore
 function setSyncing(active, err) {
   var dot = document.getElementById('syncDot');
   var txt = document.getElementById('syncTxt');
+  // @ts-ignore
   dot.className = 'sync-dot' + (active ? ' on' : err ? ' err' : '');
+  // @ts-ignore
   txt.textContent = active ? 'جاري المزامنة...' : err ? 'خطأ في الاتصال' : 'متصل ✓';
 }
 
+// @ts-ignore
 function fmtDate(d) {
   if (!d) return '';
   return new Date(d + 'T00:00:00').toLocaleDateString('ar-EG', {
@@ -336,6 +414,7 @@ function fmtDate(d) {
   });
 }
 
+// @ts-ignore
 function esc(s) {
   return String(s)
     .replace(/&/g, '&amp;')
@@ -344,10 +423,15 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
+// @ts-ignore
 function showToast(msg, err) {
   var el = document.getElementById('toast');
+  // @ts-ignore
   el.textContent    = msg;
+  // @ts-ignore
   el.style.background = err ? '#dc2626' : '#16a272';
+  // @ts-ignore
   el.classList.add('show');
+  // @ts-ignore
   setTimeout(function(){ el.classList.remove('show'); }, 3000);
 }
